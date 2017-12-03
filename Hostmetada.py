@@ -7,7 +7,7 @@ password = 'zabbix'
 
 zapi = zabbix_auth(server, username, password)
 
-metadata = {"OS": "Linux", "APP": "Zabbix", "ENV": "TEST", "TYPE": "DB", "SW": ["IIS", "MYSQL"]}
+metadata = {"OS": "Linux", "APP": "Zabbix", "ENV": "TEST", "TYPE": "DB", "SW": ["APACHE", "MSSQL"]}
 # print "metadata length", len(metadata)
 hostname = 'zab-agent01'
 
@@ -38,8 +38,8 @@ def gethostgroupids(zapi, groups):
             print "host groups already exists"
         except:
             groupid = zapi.hostgroup.create({
-                "name": [group]
-            })[0]['groupids']
+                "name": group
+            })['groupids']
             groupids.append(groupid)
             print "new group created"
     return groupids
@@ -58,9 +58,11 @@ def getgroupnames(metadata):
     return groupnames
 
 
-def updatehostinventory(zapi, metadata, hostid):
+def updatehost(zapi, metadata, hostid, groupids):
     zapi.host.update({
         "hostid": hostid,
+        "groups": [{
+            "groupid": id} for id in groupids if id],
         "inventory": {
             "notes": str(metadata)
         }
@@ -83,5 +85,4 @@ def addhosttogroups(zapi, groupids, hostid):
 hostid = gethostid(zapi, hostname)
 groupnames = getgroupnames(metadata)
 groupids = gethostgroupids(zapi, groupnames)
-addhosttogroups(zapi, groupids, hostid)
-updatehostinventory(zapi, metadata, hostid)
+updatehost(zapi, metadata, hostid, groupids)
