@@ -35,13 +35,14 @@ def gethostgroupids(zapi, groups):
                 }
             })[0]['groupid']
             groupids.append(groupid)
-            print "host groups already exists"
+            print "host groups already exists", groupid
         except:
             groupid = zapi.hostgroup.create({
                 "name": group
             })['groupids']
             groupids.append(groupid)
-            print "new group created"
+            print "new group created", groupid
+    print groupids
     return groupids
 
 
@@ -58,11 +59,22 @@ def getgroupnames(metadata):
     return groupnames
 
 
+def createnestedgroups(metadata):
+    groupnames = []
+    groupnames.append(metadata["APP"])
+    groupnames.append(groupnames[-1] + "/" + metadata["ENV"])
+    groupnames.append(groupnames[-1] + "/" + metadata["TYPE"])
+    for i in metadata["SW"]:
+        groupnames.append(groupnames[-1] + "/" + i)
+    print groupnames
+    return groupnames
+
+
 def updatehost(zapi, metadata, hostid, groupids):
     zapi.host.update({
         "hostid": hostid,
         "groups": [{
-            "groupid": id} for id in groupids if id],
+            "groupid": groupids[len(groupids) - 1]}],
         "inventory": {
             "notes": str(metadata)
         }
@@ -83,6 +95,7 @@ def addhosttogroups(zapi, groupids, hostid):
 
 
 hostid = gethostid(zapi, hostname)
-groupnames = getgroupnames(metadata)
+# groupnames = getgroupnames(metadata)
+groupnames = createnestedgroups(metadata)
 groupids = gethostgroupids(zapi, groupnames)
 updatehost(zapi, metadata, hostid, groupids)
