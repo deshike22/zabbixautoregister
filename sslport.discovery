@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+
+
+for ports in $(echo $1 | sed "s/,/ /g");
+do portlist="$portlist,"'{"{#SSL_PORT}":"'$ports'"}';
+done;
+echo '{"data":['${portlist#,}']}'
